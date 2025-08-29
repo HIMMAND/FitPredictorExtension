@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "get-urls": "^12.1.0",
+    "i": "^0.3.7",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.4.0"
+  }
+}

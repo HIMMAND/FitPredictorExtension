@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "FitPredictor",
+  "version": "1.0",
+  "description": "Predicts clothing size based on user measurements and body type",
+  "action": {
+    "default_popup": "static/index.html"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ]
+}

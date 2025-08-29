@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitPredictor</title>
+  <style>
+    /* Base styles */
+    /* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.container {
+  width: 360px;
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Updated modern title styling */
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #1a1a2e;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #007bff, #00d2ff);
+  border-radius: 3px;
+}
+
+/* Updated modern product image section with better image fitting */
+.product-section {
+  margin-bottom: 24px;
+}
+
+.product-image-container {
+  position: relative;
+  width: 100%;
+  height: 320px; /* Increased height to better accommodate vertical images */
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f0f0f0, #fafafa);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-image-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+}
+
+#product-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: cover; /* Changed from contain to cover */
+  transition: transform 0.5s ease;
+  position: relative;
+}
+
+/* For product display specifically, where original ratio should be maintained */
+.product-display #product-image {
+  object-fit: contain;
+  background-color: rgba(248, 249, 250, 0.6);
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.product-image-container:hover #product-image {
+  transform: scale(1.03); /* Reduced scale amount */
+}
+
+/* Added CSS for better image thumbnails in product selection area */
+.product-thumbnail {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.product-thumbnail.selected {
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.product-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.product-thumbnail:hover img {
+  transform: scale(1.05);
+}
+
+.product-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #28a745;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 123, 255, 0.1);
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* User inputs section */
+.user-inputs {
+  margin-bottom: 20px;
+}
+
+/* User inputs section */
+.user-inputs {
+  margin-bottom: 20px;
+}
+
+/* Gender selector buttons - UPDATED */
+.gender-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.gender-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background-color: #f0f0f0;
+  color: #495057;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gender-btn i {
+  margin-right: 8px;
+}
+
+.gender-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+}
+
+.gender-btn:hover:not(.active) {
+  background-color: #e9ecef;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  margin-right: 12px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked+.slider {
+  background-color: #e83e8c;
+}
+
+input:checked+.slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+#gender-label {
+  font-weight: 500;
+}
+
+/* Measurements */
+.measurements {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  flex: 1;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Updated modern body types section */
+.body-types-container {
+  margin-bottom: 28px;
+}
+
+.body-type-header {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: #343a40;
+  font-weight: 600;
+  position: relative;
+  padding-left: 12px;
+}
+
+.body-type-header:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: linear-gradient(to bottom, #007bff, #00d2ff);
+  border-radius: 2px;
+}
+
+.body-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.body-type-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform-origin: center;
+}
+
+.body-type-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+}
+
+.body-type-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.body-type-card.active {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #007bff, #00d2ff) border-box;
+  box-shadow: 0 8px 15px rgba(0, 123, 255, 0.2);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(0, 123, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
+}
+
+/* Improved image styling */
+.body-type-card img {
+  width: 80px;
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 12px;
+  transition: transform 0.5s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.body-type-card:hover img {
+  transform: scale(1.08);
+}
+
+.body-type-card span {
+  font-size: 15px;
+  color: #343a40;
+  font-weight: 600;
+  transition: color 0.3s ease;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.body-type-card.active span {
+  color: #007bff;
+}
+
+.body-type-card span:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background-color: #007bff;
+  transition: all 0.3s ease;
+}
+
+.body-type-card:hover span:after,
+.body-type-card.active span:after {
+  width: 100%;
+  left: 0;
+}
+
+/* Enhanced overlay that appears on hover */
+.body-description-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, rgba(0, 123, 255, 0.85), rgba(0, 210, 255, 0.85));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+  border-radius: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+
+.body-type-card:hover .body-description-overlay {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  animation: fadeInUp 0.4s forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add a subtle entrance animation for cards when page loads */
+.body-type-card {
+  animation: cardAppear 0.6s backwards;
+}
+
+.body-type-card:nth-child(1) { animation-delay: 0.1s; }
+.body-type-card:nth-child(2) { animation-delay: 0.2s; }
+.body-type-card:nth-child(3) { animation-delay: 0.3s; }
+.body-type-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Primary button */
+.primary-button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.primary-button:hover {
+  background-color: #0069d9;
+}
+
+/* Results panel */
+.result-panel {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.result-panel h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #343a40;
+}
+
+.size-result {
+  margin-bottom: 12px;
+}
+
+#size-recommendation {
+  font-size: 32px;
+  font-weight: 700;
+  color: #28a745;
+}
+
+.recommendation-details {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Utility classes */
+.hidden {
+  display: none;
+}
+
+body.blurred {
+  filter: blur(4px);
+}
+
+@keyframes loader_5191 {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loader {
+  position: relative;
+  width: 50px; /* Adjust size as needed */
+  height: 50px; /* Adjust size as needed */
+}
+
+.square {
+  background: #000000;
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -5px;
+  margin-left: -5px;
+}
+
+#sq1 {
+  margin-top: -25px;
+  margin-left: -25px;
+  animation: loader_5191 675ms ease-in-out 0s infinite alternate;
+}
+
+#sq2 {
+  margin-top: -25px;
+  animation: loader_5191 675ms ease-in-out 75ms infinite alternate;
+}
+
+#sq3 {
+  margin-top: -25px;
+  margin-left: 15px;
+  animation: loader_5191 675ms ease-in-out 150ms infinite;
+}
+
+#sq4 {
+  margin-left: -25px;
+  animation: loader_5191 675ms ease-in-out 225ms infinite;
+}
+
+#sq5 {
+  animation: loader_5191 675ms ease-in-out 300ms infinite;
+}
+
+#sq6 {
+  margin-left: 15px;
+  animation: loader_5191 675ms ease-in-out 375ms infinite;
+}
+
+#sq7 {
+  margin-top: 15px;
+  margin-left: -25px;
+  animation: loader_5191 675ms ease-in-out 450ms infinite;
+}
+
+#sq8 {
+  margin-top: 15px;
+  animation: loader_5191 675ms ease-in-out 525ms infinite;
+}
+
+#sq9 {
+  margin-top: 15px;
+  margin-left: 15px;
+  animation: loader_5191 675ms ease-in-out 600ms infinite;
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="title">FitPredictor</h1>
+
+    <div class="product-section">
+      <div class="product-image-container">
+        <img id="product-image" src="" alt="Product Image">
+        <div id="image-loading" class="loading-overlay" style="display: none;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>    
+
+    <div class="user-inputs">
+      <!-- Gender buttons - UPDATED -->
+      <div class="gender-selector">
+        <button id="male-btn" class="gender-btn active">
+          <i class="fas fa-mars"></i> Male
+        </button>
+        <button id="female-btn" class="gender-btn">
+          <i class="fas fa-venus"></i> Female
+        </button>
+      </div> 
+      
+      <div class="input-group">
+        <label for="age">Age:</label>
+        <input type="number" id="age" placeholder="Enter your age">
+      </div>
+    </div>
+    <div class="measurements">
+      <div class="input-group">
+        <label for="height">Height (cm):</label>
+        <input type="number" id="height" placeholder="Enter your height in Centimeters">
+      </div>
+      <div class="input-group">
+        <label for="weight">Weight (kg):</label>
+        <input type="number" id="weight" placeholder="Enter your weight in Kilograms">
+      </div>
+    </div>
+
+
+    <div class="body-types-container">
+      <h3 class="body-type-header">Select Your Body Type</h3>
+    
+      <!-- MALE BODY TYPES -->
+      <div id="male-body-types" class="body-type-grid">
+        <!-- Oval -->
+        <div class="body-type-card" data-type="Oval">
+          <img src="/static/images/male 5 new.png" alt="Oval" />
+          <span>Oval</span>
+          <div class="body-description-overlay">
+            <p>Heaviest around the midsection, with relatively sloping/narrow shoulders.</p>
+          </div>
+        </div>
+    
+        <!-- Triangle -->
+        <div class="body-type-card" data-type="Triangle">
+          <img src="/static/images/male 4 new.png" alt="Triangle" />
+          <span>Triangle</span>
+          <div class="body-description-overlay">
+            <p>Wider at the waist and hips with narrower shoulders.</p>
+          </div>
+        </div>
+    
+        <!-- Rectangle -->
+        <div class="body-type-card" data-type="Rectangle">
+          <img src="/static/images/male 2 new.png" alt="Rectangle" />
+          <span>Rectangle</span>
+          <div class="body-description-overlay">
+            <p>Uniform width at shoulders, waist, and hips.</p>
+          </div>
+        </div>
+    
+        <!-- Inverted Triangle -->
+        <div class="body-type-card" data-type="Inverted Triangle">
+          <img src="/static/images/male 3 new.png" alt="Inverted Triangle" />
+          <span>Inverted Triangle</span>
+          <div class="body-description-overlay">
+            <p>Broad shoulders and chest tapering to a narrow waist.</p>
+          </div>
+        </div>
+    
+        <!-- Trapezoid -->
+        <div class="body-type-card" data-type="Trapezoid">
+          <img src="/static/images/male 1 new.png" alt="Trapezoid" />
+          <span>Trapezoid</span>
+          <div class="body-description-overlay">
+            <p>Broad upper body with a gentle taper at the waist.</p>
+          </div>
+        </div>
+      </div>
+    
+      <!-- FEMALE BODY TYPES -->
+      <div id="female-body-types" class="body-type-grid hidden">
+        <!-- Apple -->
+        <div class="body-type-card" data-type="Apple">
+          <img src="/static/images/Female 4 new.png" alt="Apple" />
+          <span>Apple</span>
+          <div class="body-description-overlay">
+            <p>Fuller around the midsection with less-defined waist.</p>
+          </div>
+        </div>
+    
+        <!-- Pear (Triangle) -->
+        <div class="body-type-card" data-type="Pear (Triangle)">
+          <img src="/static/images/female 5 new.png" alt="Pear (Triangle)" />
+          <span>Pear (Triangle)</span>
+          <div class="body-description-overlay">
+            <p>Hips and thighs wider than the upper body.</p>
+          </div>
+        </div>
+    
+        <!-- Hourglass -->
+        <div class="body-type-card" data-type="Hourglass">
+          <img src="/static/images/Female 3 new.png" alt="Hourglass" />
+          <span>Hourglass</span>
+          <div class="body-description-overlay">
+            <p>Balanced bust and hips with a defined waist.</p>
+          </div>
+        </div>
+    
+        <!-- Rectangle -->
+        <div class="body-type-card" data-type="Rectangle">
+          <img src="/static/images/Female 2 new.png" alt="Rectangle" />
+          <span>Rectangle</span>
+          <div class="body-description-overlay">
+            <p>Similar measurements for bust, waist, and hips.</p>
+          </div>
+        </div>
+    
+        <!-- Inverted Triangle -->
+        <div class="body-type-card" data-type="Inverted Triangle">
+          <img src="/static/images/Female 1 new.png" alt="Inverted Triangle" />
+          <span>Inverted Triangle</span>
+          <div class="body-description-overlay">
+            <p>Broad shoulders and bust with narrower hips.</p>
+          </div>
+        </div>
+      </div>
+    </div>    
+
+    <button id="recommend-button" class="primary-button">Get Recommendation</button>
+  </div>
+
+  <div id="recommendation-result" class="result-panel hidden">
+    <h3>Recommended Size</h3>
+    <div class="size-result">
+      <span id="size-recommendation">-</span>
+    </div>
+    <div class="recommendation-details">
+      <p id="recommendation-text">Enter your measurements and select a body type to get a size recommendation.</p>
+    </div>
+  </div>
+  </div>
+  
+  <script src="pop.js"></script>
+</body>
+</html>
