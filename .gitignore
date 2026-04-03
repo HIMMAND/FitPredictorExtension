@@ -1,0 +1,17 @@
+# Local brainstorming / agent workspace
+.superpowers/
+.worktrees/
+
+# Internal superpowers planning artifacts
+docs/superpowers/
+
+# Common local Python noise for future training work
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Generated evaluation artifacts
+reports/model-evals/**/*.joblib
+
+# macOS noise
+.DS_Store

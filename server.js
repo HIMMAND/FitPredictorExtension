@@ -6,12 +6,36 @@ const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const pythonBin = process.env.PYTHON_BIN || 'python3';
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
 // CORS Middleware
-app.use(cors());
+const allowedOriginPatterns = [
+  /^chrome-extension:\/\//,
+  /^http:\/\/localhost(?::\d+)?$/,
+  /^http:\/\/127\.0\.0\.1(?::\d+)?$/,
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const isAllowed = allowedOriginPatterns.some((pattern) => pattern.test(origin));
+      if (isAllowed) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
+  })
+);
 
 // Logger Middleware: Logs each request with timestamp, method, and URL
 app.use((req, res, next) => {
@@ -204,6 +228,43 @@ function validateInput(req, res, next) {
   next();
 }
 
+function resolveChartSignal(pageChart, website) {
+  if (pageChart) {
+    return { chartStatus: 'page', chart: pageChart, chartUsed: 'page' };
+  }
+
+  let selectedChart = globalSizeChart;
+  let chartUsed = 'global';
+
+  if (website) {
+    let domain = website.toLowerCase();
+    domain = domain.replace(/^https?:\/\//, '');
+    domain = domain.replace(/^www\./, '');
+    domain = domain.split('/')[0];
+
+    console.log('Extracted domain:', domain);
+
+    for (const [brandDomain, chart] of Object.entries(brandChartMap)) {
+      if (domain.includes(brandDomain)) {
+        selectedChart = chart;
+        chartUsed = brandDomain;
+        console.log(`Using fallback chart for: ${brandDomain}`);
+        break;
+      }
+    }
+  }
+
+  return { chartStatus: 'fallback', chart: selectedChart, chartUsed };
+}
+
+function resolveReviewSignal(pageReviews) {
+  if (!Array.isArray(pageReviews) || pageReviews.length === 0) {
+    return { reviewStatus: 'unavailable', reviewNote: 'No reviews available' };
+  }
+
+  return { reviewStatus: 'present', reviewNote: null };
+}
+
 /* ------------------------------------------------------------------
    4) The recommendSize function
 ------------------------------------------------------------------ */
@@ -253,46 +314,28 @@ app.use(express.static(path.join(__dirname, '../static')));
    6) The POST endpoint: /api/recommendation
 ------------------------------------------------------------------ */
 app.post('/api/recommendation', validateInput, (req, res) => {
-  const { age, height, weight, gender, bodyType, website } = req.body;
+  const { age, height, weight, gender, bodyType, website, pageChart, pageReviews } = req.body;
 
-  console.log('Received inputs:', { age, height, weight, gender, bodyType, website });
+  console.log('Received inputs:', {
+    age,
+    height,
+    weight,
+    gender,
+    bodyType,
+    website,
+    hasPageChart: Boolean(pageChart),
+    reviewCount: Array.isArray(pageReviews) ? pageReviews.length : 0
+  });
 
-  // Default to global size chart unless domain indicates a brand
-  let selectedChart = globalSizeChart;
-
-  // If a website URL is provided, parse the domain
-  if (website) {
-    let domain = website.toLowerCase();
-    domain = domain.replace(/^https?:\/\//, '');
-    domain = domain.replace(/^www\./, '');
-    domain = domain.split('/')[0];
-
-    console.log("Extracted domain:", domain);
-
-    // Check brand map
-    for (const [brandDomain, chart] of Object.entries(brandChartMap)) {
-      // Using includes() or strict equality:
-      if (domain.includes(brandDomain)) {
-        selectedChart = chart;
-        console.log(`Using size chart for: ${brandDomain}`);
-        break;
-      }
-    }
-  }
-
-  // Determine brand name for logs
-  let chartUsed;
-  if (selectedChart === globalSizeChart) chartUsed = 'global';
-  else if (selectedChart === pullBearSizeChart) chartUsed = 'Pull & Bear';
-  else if (selectedChart === hmSizeChart) chartUsed = 'H&M';
-  else if (selectedChart === splashSizeChart) chartUsed = 'Splash';
-  else if (selectedChart === bershkaSizeChart) chartUsed = 'Bershka';
-  else if (selectedChart === brandsForLessSizeChartInches) chartUsed = 'Brands For Less';
-  else chartUsed = 'unknown';
+  const chartSignal = resolveChartSignal(pageChart, website);
+  const reviewSignal = resolveReviewSignal(pageReviews);
+  const selectedChart = chartSignal.chart;
 
   // Show brand + men/women
   const genderKey = gender.toLowerCase() === 'male' ? 'men' : 'women';
-  console.log(`Selected size chart: ${chartUsed}, using ${genderKey} sizing`);
+  console.log(
+    `Selected size chart: ${chartSignal.chartUsed}, status ${chartSignal.chartStatus}, using ${genderKey} sizing`
+  );
 
   // Call predict.py
   const pythonScriptPath = path.join(__dirname, 'predict.py');
@@ -312,7 +355,7 @@ app.post('/api/recommendation', validateInput, (req, res) => {
     });
   }
 
-  execFile('python', [pythonScriptPath, ...args], (error, stdout, stderr) => {
+  execFile(pythonBin, [pythonScriptPath, ...args], (error, stdout, stderr) => {
     if (error) {
       console.error(`Error executing Python script: ${error}`);
       return res.status(500).json({
@@ -354,7 +397,10 @@ app.post('/api/recommendation', validateInput, (req, res) => {
         message: 'Prediction successful',
         predictions,
         finalSize,
-        chartUsed
+        chartUsed: chartSignal.chartUsed,
+        chartStatus: chartSignal.chartStatus,
+        reviewStatus: reviewSignal.reviewStatus,
+        reviewNote: reviewSignal.reviewNote
       });
     } catch (parseError) {
       console.error(`Error parsing Python output: ${parseError}`);

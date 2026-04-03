@@ -2,6 +2,7 @@ import sys
 import joblib
 import numpy as np
 import json
+import pandas as pd
 
 def map_gender(gender_str):
     """
@@ -16,7 +17,24 @@ def create_combined_body_type(gender_str, body_type_str):
     For example, if gender is "male" and body type is "Oval", it returns "Male Oval".
     """
     gender_cap = gender_str.strip().capitalize()
-    body_type = body_type_str.strip()
+    normalized = body_type_str.strip().lower()
+    label_map = {
+        "male": {
+            "rectangle": "Rectangle",
+            "inverted triangle": "Inverted Triangle",
+            "trapezoid": "Trapezoid",
+            "triangle": "Triangle",
+            "oval": "Oval",
+        },
+        "female": {
+            "rectangle": "Rectangle",
+            "hourglass": "Hourglass",
+            "inverted triangle": "Inverted Triangle",
+            "pear (triangle)": "Pear (Triangle)",
+            "apple": "Apple",
+        },
+    }
+    body_type = label_map.get(gender_str.strip().lower(), {}).get(normalized, body_type_str.strip())
     return f"{gender_cap} {body_type}"
 
 def round_to_nearest_whole(value):
@@ -70,8 +88,11 @@ def main():
         print(f"Error loading models or encoder: {e}")
         sys.exit(1)
         
-    # Create the feature vector in the order: age, height, weight, gender_numeric, body_type_encoded
-    features = np.array([[age, height, weight, gender_num, body_type_num]])
+    # Match the feature names expected by the legacy shipped models.
+    features = pd.DataFrame(
+        [[age, height, weight, gender_num, body_type_num]],
+        columns=["age", "reported_height", "reported_weight", "gender_numeric", "body_type_encoded"],
+    )
     
     try:
         # Run predictions using the 4 models
