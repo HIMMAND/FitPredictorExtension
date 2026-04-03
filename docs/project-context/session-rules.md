@@ -20,3 +20,4 @@ Update docs when a session changes:
 ## Repo Hygiene
 
 - Keep generated evaluation artifacts reproducible but out of Git history when they exceed standard GitHub file limits
+- Keep generated dependency directories like `node_modules/` ignored at the repo root so verification and commit prep reflect real source changes
