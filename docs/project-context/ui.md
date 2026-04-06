@@ -20,5 +20,6 @@ The product direction is a manual-open side panel instead of a popup-first flow.
 - Reveal the recommendation with motion and auto-scroll so the result does not feel buried below the fold
 - Keep Step 2 focused on compact profile inputs plus a practical tops-only fit preference selector with `slim`, `regular`, `relaxed`, and `oversized`
 - Step 3 should show the chosen size, a compact explanation, and the predicted body measurements in both inches and cm without expanding into a full report view
+- When a supported Centrepoint or Splash page is active, the chart status should name the shared fallback chart route instead of showing `fallback (global)`
 - Show page context status early so the user can tell when product imagery was found and brand fallback sizing is ready for the active store context
 - Prefer the visible product-gallery hero image over logos or brand marks when page imagery is scanned for the preview card
