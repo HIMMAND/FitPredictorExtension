@@ -25,7 +25,8 @@ Reviews never become the primary recommendation. They only produce a small suppo
 - Pull&Bear men and women tops screenshots are being treated as body-measurement charts too, so they stay on the same range-aware tops scoring path as H&M instead of introducing a separate garment-ease conversion strategy
 - Because the captured Pull&Bear screenshots expose one value per size instead of an explicit min/max band, the runtime derives each size range by splitting the midpoint between adjacent sizes before converting the chart into inches
 - Pull&Bear fallback routing is now tops-aware: tops product titles resolve to the captured men/women tops charts, while non-top Pull&Bear items still fall back to the older generic brand chart
-- Known routing gap: the live UAE Centrepoint storefront uses `centrepointstores.com`, which is not yet normalized in the shipped recommendation flow; the approved design direction is to treat Centrepoint storefront pages as Splash and keep male/female chart routing separate through the existing Splash fallback slices
+- Bershka women currently uses a handwritten fallback chart in the shipped code, but the approved refresh direction is to replace it with captured `XS-L` body-measurement anchors in centimeters, treat `bust` as `chest`, and derive inch-based bands without inventing an unsupported `XL` row
+- Known routing gap: the live UAE Centrepoint storefront uses `centrepointstores.com`, which is not yet normalized consistently in the shipped recommendation flow; any routing update should preserve separate Splash and Centrepoint chart families rather than merging them into one brand path
 
 ## Local Model Notes
 

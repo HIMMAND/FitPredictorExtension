@@ -59,11 +59,13 @@
 
 - repo restructuring
 - runtime migration toward a manual-open side panel
-- Centrepoint storefront routing audit and design approval: the live UAE domain is `centrepointstores.com`, and the approved implementation direction is to normalize that storefront to Splash so supported male/female requests stop falling through to the generic global chart
+- Centrepoint storefront routing audit: the live UAE domain is `centrepointstores.com`, but the shipped routing is still inconsistent across backend and extension-side support logic; any follow-up should keep Splash and Centrepoint as separate chart families
+- Bershka women fallback chart refresh design approved: replace the handwritten women chart with captured `XS-L` body-measurement anchors, map `bust` to `chest`, and stop at `L` until an `XL` value is captured
 
 ## Next
 
-- implement the approved Centrepoint-to-Splash routing so `centrepointstores.com` uses Splash's gender-specific fallback charts and the side-panel support copy stays in sync with backend chart resolution
+- implement the Bershka women chart refresh from captured `XS-L` centimeter body measurements and add regression coverage for the derived ranges plus missing `XL`
+- resolve the live `centrepointstores.com` routing gap without collapsing the existing Splash and Centrepoint chart families into a single route
 - deepen review extraction so support notes can use current-page review evidence instead of always reporting unavailable
 - document a reproducible path for regenerating evaluation artifacts outside Git history
 - compare heuristic body-type labels against a stronger labeling strategy if we want more lift than the current `+0.6` to `+5.4` R2-point gains
