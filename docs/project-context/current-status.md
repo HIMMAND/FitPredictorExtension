@@ -61,9 +61,11 @@
 - runtime migration toward a manual-open side panel
 - Centrepoint storefront routing audit: the live UAE domain is `centrepointstores.com`, the shipped build can still fall through to `fallback (global)`, and the approved follow-up is to route Centrepoint and Splash through the same chart family while making the chart status show that shared path explicitly
 - Bershka women fallback chart refresh design approved: replace the handwritten women chart with captured `XS-L` body-measurement anchors, map `bust` to `chest`, and stop at `L` until an `XL` value is captured
+- favicon/icon design approved: use the monochrome `Slice Mark` symbol on a dark square field for both favicon and extension icon usage, with a master SVG feeding the exported raster sizes
 
 ## Next
 
+- create the approved `Slice Mark` favicon/extension icon asset set, export the required sizes, wire it into the manifest/favicon references, and verify legibility at small sizes
 - implement the Bershka women chart refresh from captured `XS-L` centimeter body measurements and add regression coverage for the derived ranges plus missing `XL`
 - resolve the live `centrepointstores.com` routing gap by mapping Centrepoint and Splash to the same chart family and updating the panel's chart status so supported pages no longer report `fallback (global)`
 - deepen review extraction so support notes can use current-page review evidence instead of always reporting unavailable
