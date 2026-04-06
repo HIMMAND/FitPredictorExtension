@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">FitPredictor Slice Mark</title>
+  <rect width="128" height="128" rx="28" fill="#171717" />
+  <path
+    fill="#F4F4F2"
+    d="M32 26H88V42H52L68 58H52L32 38V26ZM32 60H48V102H32V60ZM64 60H92V76H78L64 60Z"
+  />
+</svg>

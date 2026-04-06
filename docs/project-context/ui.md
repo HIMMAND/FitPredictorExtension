@@ -23,4 +23,4 @@ The product direction is a manual-open side panel instead of a popup-first flow.
 - When a supported Centrepoint or Splash page is active, the chart status should name the shared fallback chart route instead of showing `fallback (global)`
 - Show page context status early so the user can tell when product imagery was found and brand fallback sizing is ready for the active store context
 - Prefer the visible product-gallery hero image over logos or brand marks when page imagery is scanned for the preview card
-- FitPredictor's approved icon direction is a monochrome dark-square `Slice Mark` symbol that only hints at an `F`; it should work for both the browser favicon and the Chrome extension icon without gradients or gloss
+- FitPredictor now ships a monochrome dark-square `Slice Mark` symbol for both the browser favicon and the Chrome extension icon; it intentionally only hints at an `F` and stays flat, crisp, and gradient-free

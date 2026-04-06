@@ -6,6 +6,14 @@ const { execFileSync } = require("node:child_process");
 
 const repoRoot = path.resolve(__dirname, "..");
 
+function readPngSize(filePath) {
+  const buffer = fs.readFileSync(filePath);
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20),
+  };
+}
+
 test("manifest is side-panel-first", () => {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(repoRoot, "manifest.json"), "utf8")
@@ -15,6 +23,48 @@ test("manifest is side-panel-first", () => {
   assert.equal(manifest.side_panel.default_path, "index.html");
   assert.equal(manifest.background.service_worker, "background.js");
   assert.ok(manifest.permissions.includes("sidePanel"));
+});
+
+test("extension icon assets are wired and exported at expected sizes", () => {
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, "manifest.json"), "utf8")
+  );
+  const indexSource = fs.readFileSync(
+    path.join(repoRoot, "index.html"),
+    "utf8"
+  );
+
+  const expectedIcons = {
+    16: "assets/icons/icon-16.png",
+    32: "assets/icons/icon-32.png",
+    48: "assets/icons/icon-48.png",
+    128: "assets/icons/icon-128.png",
+  };
+
+  assert.deepEqual(manifest.icons, expectedIcons);
+  assert.deepEqual(manifest.action.default_icon, expectedIcons);
+  assert.match(
+    indexSource,
+    /<link rel="icon" type="image\/png" sizes="16x16" href="assets\/icons\/icon-16\.png">/
+  );
+  assert.match(
+    indexSource,
+    /<link rel="icon" type="image\/png" sizes="32x32" href="assets\/icons\/icon-32\.png">/
+  );
+
+  assert.equal(
+    fs.existsSync(path.join(repoRoot, "assets/icons/fitpredictor-slice-mark.svg")),
+    true
+  );
+
+  for (const [size, relativePath] of Object.entries(expectedIcons)) {
+    const absolutePath = path.join(repoRoot, relativePath);
+    assert.equal(fs.existsSync(absolutePath), true, `${relativePath} should exist`);
+    assert.deepEqual(readPngSize(absolutePath), {
+      width: Number(size),
+      height: Number(size),
+    });
+  }
 });
 
 test("project context docs required by AGENTS exist", () => {
