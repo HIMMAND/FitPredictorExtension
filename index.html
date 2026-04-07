@@ -63,8 +63,10 @@
     }
 
     h1 {
-      font-size: 28px;
-      margin-bottom: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      line-height: 1.3;
     }
 
     .lead {
@@ -526,15 +528,11 @@
 <body class="app-shell">
   <main class="panel">
     <section class="card hero">
-      <div>
-        <div class="eyebrow">FitPredictor</div>
-        <h1>Fallback-first fit guidance</h1>
-          <p class="lead">Review the current page, add your profile, and get a local-first size recommendation with chart and review status.</p>
-      </div>
       <div class="product-preview">
         <img id="product-image" alt="Product preview">
         <div>
-          <h2 id="product-title">Current product page</h2>
+          <div class="eyebrow">FitPredictor</div>
+          <h1 id="product-title">Current product page</h1>
           <p id="page-status" class="lead">Checking the active tab for product context.</p>
           <div class="status-row">
             <div id="image-status" class="status-pill">Scanning the page for product imagery</div>
