@@ -1,392 +1,592 @@
-document.addEventListener('DOMContentLoaded', function () {
-  // Elements for recommendation UI
-  const productImage = document.getElementById('product-image');
-  const imageLoading = document.getElementById('image-loading');
-  const maleBtn = document.getElementById('male-btn');
-  const femaleBtn = document.getElementById('female-btn');
-  const maleBodyTypes = document.getElementById('male-body-types');
-  const femaleBodyTypes = document.getElementById('female-body-types');
-  const bodyTypeCards = document.querySelectorAll('.body-type-card');
-  const recommendButton = document.getElementById('recommend-button');
-  const recommendationResult = document.getElementById('recommendation-result');
-  const sizeRecommendation = document.getElementById('size-recommendation');
-  const recommendationText = document.getElementById('recommendation-text');
-  const heightInput = document.getElementById('height');
-  const weightInput = document.getElementById('weight');
-  const ageInput = document.getElementById('age');
-  
-  // Create a container for parsed images below the product image
-  const productSection = document.querySelector('.product-section');
-  const imagesContainer = document.createElement('div');
-  imagesContainer.id = 'parsed-images-container';
-  imagesContainer.style.maxHeight = '200px';
-  imagesContainer.style.overflowY = 'auto';
-  imagesContainer.style.marginTop = '15px';
-  imagesContainer.style.display = 'grid';
-  imagesContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-  imagesContainer.style.gap = '8px';
-  productSection.appendChild(imagesContainer);
-  
-  // Add a container specifically for high-resolution images at the top
-  const highResContainer = document.createElement('div');
-  highResContainer.id = 'high-res-images';
-  highResContainer.style.display = 'grid';
-  highResContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-  highResContainer.style.gap = '10px';
-  highResContainer.style.marginBottom = '15px';
-  highResContainer.style.padding = '8px';
-  highResContainer.style.backgroundColor = '#f8f9fa';
-  highResContainer.style.borderRadius = '5px';
-  
-  // Add a title for the high-res section
-  const highResTitle = document.createElement('h4');
-  highResTitle.textContent = 'Best product images found:';
-  highResTitle.style.marginTop = '15px';
-  highResTitle.style.marginBottom = '5px';
-  highResTitle.style.gridColumn = '1 / span 2';
-  highResContainer.appendChild(highResTitle);
-  
-  // Add the high-res container before the regular images container
-  productSection.insertBefore(highResContainer, imagesContainer);
-  
-  // Add a title for the thumbnails section
-  const thumbnailsTitle = document.createElement('h4');
-  thumbnailsTitle.style.marginTop = '15px';
-  thumbnailsTitle.style.marginBottom = '5px';
-  productSection.insertBefore(thumbnailsTitle, imagesContainer);
+import { getRecommendation, warmup } from "./recommendation-engine.js";
 
-  // State variables
-  let selectedBodyType = null;
-  let gender = 'male'; // Default gender
-  let parsedImages = [];
-  let websiteURL = ''; // We'll store the active tab's URL here
+document.addEventListener("DOMContentLoaded", () => {
+  const extractor = window.FitPredictorPageContext;
+  const productImage = document.getElementById("product-image");
+  const productTitle = document.getElementById("product-title");
+  const pageStatus = document.getElementById("page-status");
+  const imageStatus = document.getElementById("image-status");
+  const chartDetectStatus = document.getElementById("chart-detect-status");
+  const form = document.getElementById("profile-form");
+  const recommendButton = document.getElementById("recommend-button");
+  const stepBodyType = document.getElementById("step-body-type");
+  const stepProfileMetrics = document.getElementById("step-profile-metrics");
+  const stepResult = document.getElementById("step-result");
+  const sizeRecommendation = document.getElementById("size-recommendation");
+  const resultSummary = document.getElementById("result-summary");
+  const recommendationExplanation = document.getElementById("recommendation-explanation");
+  const measurementSummary = document.getElementById("measurement-summary");
+  const chartStatus = document.getElementById("chart-status");
+  const reviewStatus = document.getElementById("review-status");
+  const reviewNote = document.getElementById("review-note");
+  const websiteInput = document.getElementById("website");
+  const fitPreferenceInput = document.getElementById("fit-preference");
+  const genderToggle = document.getElementById("gender-toggle");
+  const genderInput = document.getElementById("gender");
+  const bodyTypeInput = document.getElementById("body-type");
+  const bodyTypeVariantInput = document.getElementById("body-type-variant");
+  const bodyTypeCarousel = document.getElementById("body-type-carousel");
+  const step1NextButton = document.getElementById("step-1-next");
+  const step2BackButton = document.getElementById("step-2-back");
+  const step3BackButton = document.getElementById("step-3-back");
 
-  // 1) Get the active tab's URL so we can pass it to the server if needed
-  chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-    if (tabs[0] && tabs[0].url) {
-      websiteURL = tabs[0].url;
-    }
-  });
+  let activeTabId = null;
+  let activeTabUrl = "";
+  let activeStep = 1;
+  let activeCarouselIndex = 0;
+  let activePageContext = {
+    pageChart: null,
+    pageChartMeta: { source: "disabled", label: null },
+    pageReviews: [],
+  };
 
-  // Parse images as soon as the extension is activated
-  parseImagesFromActivePage();
-
-  // --- Image Parsing Functions ---
-  
-  // Main function to parse images from the active webpage
-  function parseImagesFromActivePage() {
-    imageLoading.style.display = 'flex';
-    
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-      if (tabs[0]) {
-        chrome.scripting.executeScript({
-          target: { tabId: tabs[0].id },
-          function: getAllImagesFromPage
-        }, (results) => {
-          if (chrome.runtime.lastError) {
-            console.error('Error parsing images:', chrome.runtime.lastError);
-            imageLoading.style.display = 'none';
-            return;
-          }
-          
-          if (results && results[0] && results[0].result) {
-            parsedImages = results[0].result;
-            displayParsedImages(parsedImages);
-          }
-          
-          imageLoading.style.display = 'none';
-        });
-      }
-    });
-  }
-  
-  // This function will be injected into the active tab to get all images
-  function getAllImagesFromPage() {
-    // Get all image elements
-    const imgElements = Array.from(document.querySelectorAll('img'));
-    
-    // Filter out tiny images (likely icons) and get details
-    const images = imgElements
-      .filter(img => {
-        // Filter out very small images (icons, bullets, etc.)
-        return img.naturalWidth > 50 && img.naturalHeight > 50;
-      })
-      .map(img => {
-        // Calculate resolution (total pixels)
-        const resolution = img.naturalWidth * img.naturalHeight;
-        
-        // Calculate aspect ratio
-        const aspectRatio = img.naturalWidth / img.naturalHeight;
-        
-        // Check if image is likely a product image based on various factors
-        const isLikelyProduct = 
-          // Text-based detection
-          (img.alt && /product|item|clothing|apparel|wear|model/i.test(img.alt)) || 
-          (img.src && /product|pdp|item|detail|zoom|large|full/i.test(img.src)) ||
-          // Size-based detection (most product images are relatively square)
-          (resolution > 40000 && aspectRatio > 0.5 && aspectRatio < 2.0) ||
-          // Position-based detection (often in center sections)
-          (img.getBoundingClientRect().top > 100 && 
-           img.getBoundingClientRect().left > window.innerWidth * 0.2 &&
-           img.getBoundingClientRect().right < window.innerWidth * 0.8);
-        
-        // Get important attributes
-        return {
-          src: img.src,
-          alt: img.alt || '',
-          width: img.naturalWidth,
-          height: img.naturalHeight,
-          resolution: resolution,
-          aspectRatio: aspectRatio,
-          isPotentialProduct: isLikelyProduct
-        };
-      })
-      // Sort by product likelihood first, then by resolution
-      .sort((a, b) => {
-        if (a.isPotentialProduct !== b.isPotentialProduct) {
-          return a.isPotentialProduct ? -1 : 1;
-        }
-        return b.resolution - a.resolution;
-      });
-    
-    return images;
-  }
-  
-  // Function to display the parsed images in the extension popup
-  function displayParsedImages(images) {
-    highResContainer.innerHTML = '';
-    
-    // Add title back to high-res container
-    const highResTitle = document.createElement('h4');
-    highResTitle.textContent = 'Best product images found:';
-    highResTitle.style.marginTop = '0';
-    highResTitle.style.marginBottom = '5px';
-    highResTitle.style.gridColumn = '1 / span 2';
-    highResContainer.appendChild(highResTitle);
-    
-    if (images.length === 0) {
-      const noImages = document.createElement('p');
-      noImages.textContent = 'No suitable images found on this page.';
-      noImages.style.gridColumn = '1 / span 2';
-      noImages.style.textAlign = 'center';
-      highResContainer.appendChild(noImages);
-      return;
-    }
-    
-    // Get the top two likely product images with highest resolution
-    const highResImages = images
-      .filter(img => img.isPotentialProduct)
-      .slice(0, 2);
-    
-    // If we don't have two product images, get the highest resolution ones regardless
-    if (highResImages.length < 2) {
-      const additionalHighResImages = images
-        .filter(img => !highResImages.some(highRes => highRes.src === img.src))
-        .slice(0, 2 - highResImages.length);
-      
-      highResImages.push(...additionalHighResImages);
-    }
-    
-    // Display the high-resolution images
-    highResImages.forEach((image, index) => {
-      const imgWrapper = document.createElement('div');
-      imgWrapper.style.position = 'relative';
-      imgWrapper.style.border = '1px solid #ddd';
-      imgWrapper.style.borderRadius = '4px';
-      imgWrapper.style.padding = '5px';
-      imgWrapper.style.backgroundColor = 'white';
-      
-      const img = document.createElement('img');
-      img.src = image.src;
-      img.alt = image.alt || 'Product image';
-      img.style.width = '100%';
-      img.style.height = '120px';
-      img.style.objectFit = 'contain';
-      img.style.cursor = 'pointer';
-      
-      // Add click handler to select this image
-      img.addEventListener('click', function() {
-        productImage.src = image.src;
-        // Highlight selected image and remove highlight from others
-        document.querySelectorAll('#high-res-images img, #parsed-images-container img').forEach(i => {
-          i.parentElement.style.boxShadow = 'none';
-        });
-        imgWrapper.style.boxShadow = '0 0 0 2px #3366ff';
-      });
-      
-      // Add image details
-      const details = document.createElement('div');
-      details.style.fontSize = '11px';
-      details.style.marginTop = '4px';
-      details.style.textAlign = 'center';
-      details.innerHTML = `<strong>${image.width}×${image.height}</strong>`;
-      
-      // Add "likely product" badge if applicable
-      if (image.isPotentialProduct) {
-        const badge = document.createElement('div');
-        badge.textContent = 'Product';
-        badge.style.position = 'absolute';
-        badge.style.top = '8px';
-        badge.style.right = '8px';
-        badge.style.backgroundColor = '#28a745';
-        badge.style.color = 'white';
-        badge.style.padding = '2px 6px';
-        badge.style.borderRadius = '3px';
-        badge.style.fontSize = '10px';
-        imgWrapper.appendChild(badge);
-      }
-      
-      imgWrapper.appendChild(img);
-      imgWrapper.appendChild(details);
-      highResContainer.appendChild(imgWrapper);
-    });
-    
-    // Select the first high-res image by default
-    if (highResImages.length > 0) {
-      productImage.src = highResImages[0].src;
-      // Highlight the first image
-      const firstImgWrapper = highResContainer.querySelector('div');
-      if (firstImgWrapper) {
-        firstImgWrapper.style.boxShadow = '0 0 0 2px #3366ff';
-      }
-    }
+  if (!extractor || typeof extractor.getBodyTypeOptions !== "function") {
+    console.error("FitPredictor page context helper failed to load");
+    pageStatus.textContent = "Extension helper failed to initialize.";
+    imageStatus.textContent = "Reload the extension and refresh the tab";
+    chartDetectStatus.textContent = "";
+    recommendButton.disabled = true;
+    return;
   }
 
-  // --- Recommendation Logic ---
-  // Toggle between male and female body types using the new buttons
-  maleBtn.addEventListener('click', function () {
-    gender = 'male';
-    maleBtn.classList.add('active');
-    femaleBtn.classList.remove('active');
-    maleBodyTypes.classList.remove('hidden');
-    femaleBodyTypes.classList.add('hidden');
-    resetBodyTypeSelection();
-  });
+  const genderButtons = Array.from(genderToggle?.querySelectorAll("[data-gender]") || []);
 
-  femaleBtn.addEventListener('click', function () {
-    gender = 'female';
-    femaleBtn.classList.add('active');
-    maleBtn.classList.remove('active');
-    femaleBodyTypes.classList.remove('hidden');
-    maleBodyTypes.classList.add('hidden');
-    resetBodyTypeSelection();
-  });
-
-  // Body type selection
-  bodyTypeCards.forEach(card => {
-    card.addEventListener('click', function () {
-      const currentCards = gender === 'female' ?
-        femaleBodyTypes.querySelectorAll('.body-type-card') :
-        maleBodyTypes.querySelectorAll('.body-type-card');
-      currentCards.forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      selectedBodyType = this.getAttribute('data-type');
+  for (const button of genderButtons) {
+    button.addEventListener("click", () => {
+      syncGenderToggle(button.dataset.gender);
     });
+  }
+
+  step1NextButton?.addEventListener("click", () => {
+    goToStep(2);
   });
 
-  // Final "Recommend" process
-  recommendButton.addEventListener('click', async function () {
-    const height = parseFloat(heightInput.value);
-    const weight = parseFloat(weightInput.value);
-    const age = parseInt(ageInput.value);
-    const selectedImageSrc = productImage.src;
+  step2BackButton?.addEventListener("click", () => {
+    goToStep(1);
+  });
 
-    if (isNaN(height) || isNaN(weight) || isNaN(age) || !selectedBodyType) {
-      alert('Please enter your height, weight, age, and select a body type.');
-      return;
-    }
-    
-    if (!selectedImageSrc || selectedImageSrc === '') {
-      alert('Please select a product image first.');
+  step3BackButton?.addEventListener("click", () => {
+    goToStep(2);
+  });
+
+  syncGenderToggle();
+  renderBodyTypeCarousel();
+  goToStep(1);
+
+  initializePanel().catch((error) => {
+    console.error("Failed to initialize panel", error);
+    pageStatus.textContent = "Unable to read the active page context.";
+    imageStatus.textContent = "Image scan unavailable";
+    chartDetectStatus.textContent = "";
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!bodyTypeInput.value) {
+      bodyTypeCarousel.querySelector("button")?.focus();
       return;
     }
 
-    // Show loader: add blur + custom spinner overlay
-    document.body.classList.add('blurred');
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.id = 'loading-overlay';
-    loadingOverlay.style.position = 'fixed';
-    loadingOverlay.style.top = '0';
-    loadingOverlay.style.left = '0';
-    loadingOverlay.style.width = '100%';
-    loadingOverlay.style.height = '100%';
-    loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
-    loadingOverlay.style.display = 'flex';
-    loadingOverlay.style.alignItems = 'center';
-    loadingOverlay.style.justifyContent = 'center';
-    loadingOverlay.style.zIndex = '9999';
+    recommendButton.disabled = true;
+    recommendButton.textContent = "Analyzing fallback chart and profile...";
 
-    // Insert your custom spinner HTML
-    loadingOverlay.innerHTML = `
-      <!-- From Uiverse.io by JkHuger --> 
-      <div class="loader">
-        <div class="square" id="sq1"></div>
-        <div class="square" id="sq2"></div>
-        <div class="square" id="sq3"></div>
-        <div class="square" id="sq4"></div>
-        <div class="square" id="sq5"></div>
-        <div class="square" id="sq6"></div>
-        <div class="square" id="sq7"></div>
-        <div class="square" id="sq8"></div>
-        <div class="square" id="sq9"></div>
-      </div>
-      <!-- End Uiverse.io spinner -->
-    `;
-    document.body.appendChild(loadingOverlay);
-
-    // Build the final payload (no productImage, includes websiteURL if you want brand-based sizing)
     const payload = {
-      height,
-      weight,
-      age,
-      bodyType: selectedBodyType,
-      gender,
-      // We'll also include the site URL for brand-based size charts, if needed:
-      website: websiteURL 
+      age: Number(document.getElementById("age").value),
+      height: Number(document.getElementById("height").value),
+      weight: Number(document.getElementById("weight").value),
+      gender: genderInput.value,
+      bodyType: bodyTypeInput.value,
+      bodyTypeVariant: bodyTypeVariantInput?.value || "default",
+      fitPreference: document.getElementById("fit-preference").value,
+      website: activeTabUrl,
+      productTitle: activePageContext.title || "",
+      pageReviews: activePageContext.pageReviews || [],
     };
 
-    // Console log what we send
-    console.log('Sending data to server:', payload);
-
-    // POST to the recommendation API (without productImage)
-    fetch('http://localhost:3000/api/recommendation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        // Remove loading overlay and blur effect
-        document.body.classList.remove('blurred');
-        if (document.getElementById('loading-overlay')) {
-          document.getElementById('loading-overlay').remove();
-        }
-        
-        console.log('API Response:', data);
-        // Update UI with the final size from the backend
-        sizeRecommendation.textContent = data.finalSize || "M";
-        recommendationText.textContent = `Based on your measurements, we recommend size: ${data.finalSize}`;
-        recommendationResult.classList.remove('hidden');
-      })
-      .catch(error => {
-        document.body.classList.remove('blurred');
-        if (document.getElementById('loading-overlay')) {
-          document.getElementById('loading-overlay').remove();
-        }
-        console.error('Error:', error);
-        alert('There was an error getting your recommendation. Please try again.');
-      });
+    try {
+      const data = await getRecommendation(payload);
+      renderResult(data);
+    } catch (error) {
+      console.error("Recommendation error", error);
+      goToStep(3);
+      stepResult.classList.remove("result-ready");
+      sizeRecommendation.classList.remove("is-highlighted");
+      void stepResult.offsetWidth;
+      void sizeRecommendation.offsetWidth;
+      stepResult.classList.add("result-ready");
+      sizeRecommendation.textContent = "-";
+      const errorState = getRecommendationErrorState(error);
+      resultSummary.textContent = errorState.summary;
+      renderMeasurementSummary([]);
+      recommendationExplanation.textContent =
+        errorState.reviewNote || errorState.summary;
+      chartStatus.textContent = errorState.chartStatus;
+      reviewStatus.textContent = errorState.reviewStatus;
+      reviewNote.textContent = errorState.reviewNote;
+      stepResult.scrollIntoView({ behavior: "smooth", block: "start" });
+    } finally {
+      recommendButton.disabled = false;
+      recommendButton.textContent = "Get Recommendation";
+    }
   });
 
-  // Utility function to reset body type selection
-  function resetBodyTypeSelection() {
-    bodyTypeCards.forEach(card => card.classList.remove('active'));
-    selectedBodyType = null;
-    recommendationResult.classList.add('hidden');
+  async function initializePanel() {
+    warmup(); // fire-and-forget: loads WASM + 4 ONNX models while the user fills the form
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    activeTabId = tab?.id ?? null;
+    activeTabUrl = tab?.url || "";
+    websiteInput.value = activeTabUrl;
+
+    if (activeTabUrl) {
+      pageStatus.textContent = `Connected to ${new URL(activeTabUrl).hostname}`;
+    } else {
+      pageStatus.textContent = "No active product page detected.";
+    }
+
+    if (!activeTabId || !/^https?:/i.test(activeTabUrl)) {
+      imageStatus.textContent = "Open a shopping page to scan imagery";
+      chartDetectStatus.textContent = "Open a shopping page so brand fallback sizing can attach to the store";
+      return;
+    }
+
+    const context = await requestPageContext(activeTabId);
+    activePageContext = context;
+    renderPageContext(context);
+  }
+
+  function getCarouselOptions() {
+    return extractor.getBodyTypeOptions(genderInput.value);
+  }
+
+  function goToStep(stepNumber) {
+    activeStep = stepNumber;
+    stepBodyType.hidden = activeStep !== 1;
+    stepProfileMetrics.hidden = activeStep !== 2;
+    stepResult.hidden = activeStep !== 3;
+  }
+
+  function syncGenderToggle(nextGender = genderInput.value) {
+    const normalizedGender =
+      nextGender === "female" || nextGender === "male" ? nextGender : "male";
+    const options = extractor.getBodyTypeOptions(normalizedGender);
+
+    genderInput.value = normalizedGender;
+    activeCarouselIndex = 0;
+    bodyTypeInput.value = options[0]?.value || "";
+    if (bodyTypeVariantInput) {
+      bodyTypeVariantInput.value = options[0]?.variant || "default";
+    }
+
+    for (const button of genderButtons) {
+      const isActive = button.dataset.gender === normalizedGender;
+      button.setAttribute("aria-pressed", String(isActive));
+      button.classList.toggle("is-active", isActive);
+    }
+
+    renderBodyTypeCarousel();
+  }
+
+  function renderBodyTypeCarousel(focusDirection = null) {
+    const options = getCarouselOptions();
+
+    if (!options.length) {
+      bodyTypeInput.value = "";
+      bodyTypeCarousel.innerHTML = `
+        <div class="carousel-empty-state">
+          <div class="carousel-image-fallback">
+            <strong>No body types available</strong>
+            <span>Please try another selection.</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    activeCarouselIndex =
+      ((activeCarouselIndex % options.length) + options.length) % options.length;
+
+    const option = options[activeCarouselIndex];
+    const assetUrl =
+      typeof chrome !== "undefined" && chrome.runtime?.getURL
+        ? chrome.runtime.getURL(option.assetPath)
+        : option.assetPath;
+    const imageScale =
+      Number.isFinite(Number(option.imageScale)) && Number(option.imageScale) > 0
+        ? Number(option.imageScale)
+        : 1;
+
+    bodyTypeInput.value = option.value;
+    if (bodyTypeVariantInput) {
+      bodyTypeVariantInput.value = option.variant || "default";
+    }
+    bodyTypeCarousel.innerHTML = `
+      <div class="body-type-carousel-card" data-body-type="${option.assetSlug}" data-carousel-motion="${focusDirection || "idle"}">
+          <div class="carousel-card-content">
+            <div class="carousel-model-frame">
+            <img class="carousel-model-image" style="--carousel-image-scale: ${imageScale};" src="${assetUrl}" alt="${option.assetAlt}" loading="eager">
+            <div class="carousel-image-fallback" hidden>
+              <strong>${option.label}</strong>
+              <span>Preview unavailable</span>
+            </div>
+          </div>
+          <div class="carousel-copy">
+            <div class="carousel-body-type-name">${option.label}</div>
+            <div class="carousel-body-type-description">${option.description}</div>
+          </div>
+          <div class="carousel-controls-row" aria-label="Body type carousel controls">
+            <button type="button" class="carousel-nav carousel-nav-previous" data-carousel-direction="previous" aria-label="Previous body type">
+              Previous
+            </button>
+            <button type="button" class="carousel-nav carousel-nav-next" data-carousel-direction="next" aria-label="Next body type">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const previousButton = bodyTypeCarousel.querySelector('[data-carousel-direction="previous"]');
+    const nextButton = bodyTypeCarousel.querySelector('[data-carousel-direction="next"]');
+    const image = bodyTypeCarousel.querySelector(".carousel-model-image");
+    const fallback = bodyTypeCarousel.querySelector(".carousel-image-fallback");
+
+    previousButton?.addEventListener("click", () => {
+      moveCarousel(-1, "previous");
+    });
+
+    nextButton?.addEventListener("click", () => {
+      moveCarousel(1, "next");
+    });
+
+    image?.addEventListener("load", () => {
+      image.hidden = false;
+      fallback.hidden = true;
+    });
+
+    image?.addEventListener("error", () => {
+      image.hidden = true;
+      fallback.hidden = false;
+    });
+
+    if (image?.complete && image.naturalWidth === 0) {
+      image.hidden = true;
+      fallback.hidden = false;
+    }
+
+    if (focusDirection === "previous") {
+      previousButton?.focus();
+    }
+
+    if (focusDirection === "next") {
+      nextButton?.focus();
+    }
+  }
+
+  function moveCarousel(direction, focusDirection = null) {
+    const options = getCarouselOptions();
+
+    if (!options.length) {
+      return;
+    }
+
+    activeCarouselIndex =
+      (activeCarouselIndex + direction + options.length) % options.length;
+    renderBodyTypeCarousel(focusDirection);
+  }
+
+  function renderPageContext(context) {
+    if (context.title) {
+      productTitle.textContent = truncateText(context.title, 80);
+    }
+
+    if (context.bestImage) {
+      productImage.src = context.bestImage;
+      imageStatus.textContent = "Product image found on the page";
+    } else {
+      productImage.removeAttribute("src");
+      productImage.alt = "No product image found";
+      imageStatus.textContent = "No large product image found";
+    }
+
+    const SUPPORTED_DOMAINS = [
+      "hm.com", "pullandbear.com", "pull&bear.com",
+      "splashfashions.com", "splash.com", "centrepoint.com", "centrepointarabia.com",
+      "bershka.com", "brandsforless.com", "brands4less.com",
+    ];
+    const domain = activeTabUrl
+      .toLowerCase()
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .split("/")[0];
+    const isSupported = SUPPORTED_DOMAINS.some((d) => domain.includes(d));
+    chartDetectStatus.textContent = isSupported
+      ? `Size chart ready for ${domain}`
+      : "This site isn't directly supported — predictions will use a generic global size chart. Supported brands: H&M, Pull&Bear, Splash, Bershka, Brands For Less.";
+  }
+
+  async function requestPageContext(tabId) {
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, {
+        type: "fitpredictor:extract-page-context",
+      });
+
+      if (response?.ok && response.context) {
+        return response.context;
+      }
+    } catch (error) {
+      // Fall through to inject-and-retry for already-open pages or missing receivers.
+    }
+
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["page-context.js"],
+    });
+
+    const retryResponse = await chrome.tabs.sendMessage(tabId, {
+      type: "fitpredictor:extract-page-context",
+    });
+
+    if (retryResponse?.ok && retryResponse.context) {
+      return retryResponse.context;
+    }
+
+    if (retryResponse?.error) {
+      throw new Error(retryResponse.error);
+    }
+
+    return {
+      title: "",
+      bestImage: null,
+      pageChart: null,
+      pageChartMeta: { source: "disabled", label: null },
+      pageReviews: [],
+    };
+  }
+
+  function renderResult(data) {
+    goToStep(3);
+    stepResult.classList.remove("result-ready");
+    sizeRecommendation.classList.remove("is-highlighted");
+    void stepResult.offsetWidth;
+    void sizeRecommendation.offsetWidth;
+
+    stepResult.classList.add("result-ready");
+    sizeRecommendation.classList.add("is-highlighted");
+    sizeRecommendation.textContent = data.finalSize || "-";
+    resultSummary.textContent =
+      data.message || "Your fallback size recommendation is ready.";
+    renderMeasurementSummary(buildMeasurementRows(data));
+    recommendationExplanation.textContent = buildRecommendationExplanation(data);
+    chartStatus.textContent = formatChartStatus(data);
+    reviewStatus.textContent = data.reviewStatus || "unavailable";
+    reviewNote.textContent = data.reviewNote || "No reviews available";
+    stepResult.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function formatChartStatus(data) {
+    if (data.chartUsed) {
+      return `${data.chartStatus || "unknown"} (${data.chartUsed})`;
+    }
+
+    return data.chartStatus || "unknown";
+  }
+
+  function getRecommendationErrorState(error) {
+    const errorMessage = String(error?.message || "");
+
+    return {
+      summary: "We could not generate a recommendation yet.",
+      chartStatus: "Unavailable",
+      reviewStatus: "Unavailable",
+      reviewNote: `The recommendation request failed: ${errorMessage || "unknown error"}`,
+    };
+  }
+
+  function renderMeasurementSummary(rows) {
+    if (!measurementSummary) {
+      return;
+    }
+
+    if (!rows.length) {
+      measurementSummary.innerHTML = `
+        <span class="muted">Predicted measurement breakdown unavailable.</span>
+      `;
+      return;
+    }
+
+    measurementSummary.innerHTML = rows
+      .map(
+        (row) => `
+          <div class="measurement-row">
+            <span>${row.label}</span>
+            <span class="measurement-values">
+              <span class="primary">${formatMeasurementValue(row.inches, "in")}</span>
+              <span class="secondary">${formatMeasurementValue(row.cm, "cm")}</span>
+            </span>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  function buildMeasurementRows(data) {
+    const labels = [
+      ["chest", "Chest"],
+      ["waist", "Waist"],
+      ["neck", "Neck"],
+      ["hip", "Hip"],
+    ];
+
+    return labels
+      .map(([key, label]) => {
+        const pair = extractMeasurementPair(data, key);
+        if (!pair) {
+          return null;
+        }
+
+        return { key, label, ...pair };
+      })
+      .filter(Boolean);
+  }
+
+  function extractMeasurementPair(data, measurementKey) {
+    const measurementContainers = [
+      data?.measurements?.[measurementKey],
+      data?.measurementSummary?.[measurementKey],
+      data?.predictedMeasurements?.[measurementKey],
+    ];
+
+    for (const container of measurementContainers) {
+      const normalized = normalizeMeasurementContainer(container);
+      if (normalized) {
+        return normalized;
+      }
+    }
+
+    const predictionSource =
+      data?.predictions && typeof data.predictions === "object" ? data.predictions : data || {};
+    const rawValue =
+      numberOrNull(predictionSource[`${measurementKey}_raw`]) ??
+      numberOrNull(predictionSource[`${measurementKey}_prediction`]) ??
+      numberOrNull(predictionSource[measurementKey]);
+
+    if (rawValue == null) {
+      return null;
+    }
+
+    return {
+      inches: rawValue,
+      cm: rawValue * 2.54,
+    };
+  }
+
+  function normalizeMeasurementContainer(container) {
+    if (container == null) {
+      return null;
+    }
+
+    if (typeof container === "number" || typeof container === "string") {
+      const inchesValue = numberOrNull(container);
+      if (inchesValue == null) {
+        return null;
+      }
+
+      return {
+        inches: inchesValue,
+        cm: inchesValue * 2.54,
+      };
+    }
+
+    if (typeof container !== "object") {
+      return null;
+    }
+
+    const inchesValue =
+      numberOrNull(container.inches) ??
+      numberOrNull(container.inch) ??
+      numberOrNull(container.valueInches) ??
+      numberOrNull(container.inchesValue) ??
+      numberOrNull(container.value) ??
+      numberOrNull(container.prediction) ??
+      numberOrNull(container.raw);
+    const cmValue =
+      numberOrNull(container.cm) ??
+      numberOrNull(container.centimeters) ??
+      numberOrNull(container.centimetres) ??
+      numberOrNull(container.valueCm) ??
+      numberOrNull(container.cmValue) ??
+      numberOrNull(container.predictionCm);
+
+    if (inchesValue == null && cmValue == null) {
+      return null;
+    }
+
+    const resolvedInches = inchesValue ?? cmValue / 2.54;
+    const resolvedCm = cmValue ?? resolvedInches * 2.54;
+
+    return {
+      inches: resolvedInches,
+      cm: resolvedCm,
+    };
+  }
+
+  function buildRecommendationExplanation(data) {
+    const backendExplanation =
+      data?.explanation ||
+      data?.recommendationExplanation ||
+      data?.reason ||
+      data?.explanationText ||
+      data?.sizeReason;
+
+    if (backendExplanation) {
+      return String(backendExplanation).trim();
+    }
+
+    const measurementRows = buildMeasurementRows(data);
+    if (!measurementRows.length) {
+      return "No measurement breakdown is available yet.";
+    }
+
+    const labels = measurementRows.map((row) => row.label.toLowerCase()).join(", ");
+    const finalSize = data?.finalSize ? ` ${data.finalSize}` : "";
+    const chartLabel = data?.chartUsed ? `the ${data.chartUsed} fallback chart` : "the fallback chart";
+
+    return `FitPredictor used ${chartLabel} to compare your ${labels} predictions and chose${finalSize || " the suggested size"}.`;
+  }
+
+  function formatMeasurementValue(value, unit) {
+    const numeric = numberOrNull(value);
+    if (numeric == null) {
+      return "n/a";
+    }
+
+    const rounded = Math.round(numeric * 10) / 10;
+    const displayValue = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    return `${displayValue} ${unit}`;
+  }
+
+  function numberOrNull(value) {
+    if (value == null || value === "") {
+      return null;
+    }
+
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  function truncateText(value, maxLength) {
+    if (!value) {
+      return "";
+    }
+
+    const text = String(value).replace(/\s+/g, " ").trim();
+
+    if (text.length <= maxLength) {
+      return text;
+    }
+
+    return `${text.slice(0, maxLength - 1).trim()}…`;
   }
 });
