@@ -1,17 +1,16 @@
 {
-  "name": "backend",
+  "name": "fitpredictor",
   "version": "1.0.0",
-  "main": "server.js",
   "scripts": {
-    "test": "node --test tests/foundation.test.js && node --check server.js && node --check pop.js && node --check background.js",
-    "start": "node server.js"
+    "build": "esbuild pop.js --bundle --platform=browser --outfile=dist/pop.js --external:chrome --conditions=onnxruntime-web-use-extern-wasm",
+    "test": "node --test tests/foundation.test.js tests/page-context.test.js tests/ml-pipeline.test.js tests/recommendation.test.js && node --check background.js && node --check page-context.js && node --check recommendation.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.2"
+  "license": "MIT",
+  "description": "Privacy-first fit predictor Chrome extension",
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "playwright": "^1.59.1"
   }
 }

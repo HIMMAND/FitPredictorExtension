@@ -97,7 +97,6 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      margin-top: 10px;
       padding: 8px 12px;
       border-radius: 999px;
       background: var(--accent-soft);
@@ -105,10 +104,36 @@
       font-size: 13px;
     }
 
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
     .grid {
       display: grid;
       gap: 12px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .form-shell {
+      display: grid;
+      gap: 16px;
+    }
+
+    .step-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    #step-body-type {
+      padding: 22px;
+      gap: 16px;
+    }
+
+    #step-body-type .lead {
+      max-width: 40ch;
     }
 
     label {
@@ -146,9 +171,237 @@
       grid-column: 1 / -1;
     }
 
+    .gender-toggle {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+    }
+
+    .gender-toggle button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-radius: 10px;
+      box-shadow: none;
+    }
+
+    .gender-toggle button[aria-pressed="true"] {
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .body-type-carousel {
+      display: grid;
+      gap: 12px;
+    }
+
+    .body-type-carousel-card,
+    .carousel-empty-state {
+      display: grid;
+      align-items: stretch;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+      border: 1px solid var(--line);
+      min-height: clamp(360px, 64vw, 480px);
+    }
+
+    .body-type-carousel-card {
+      --carousel-enter-x: 0px;
+      animation: carouselCardIn 260ms ease;
+    }
+
+    .body-type-carousel-card[data-carousel-motion="previous"] {
+      --carousel-enter-x: -20px;
+    }
+
+    .body-type-carousel-card[data-carousel-motion="next"] {
+      --carousel-enter-x: 20px;
+    }
+
+    .carousel-card-content {
+      display: grid;
+      gap: 16px;
+      min-width: 0;
+      grid-template-rows: minmax(0, 1fr) auto auto;
+    }
+
+    .carousel-model-frame {
+      min-height: clamp(360px, 72vw, 480px);
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, rgba(240, 138, 36, 0.24), transparent 44%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      display: grid;
+      place-items: center;
+      padding: 14px;
+    }
+
+    .carousel-model-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      transform: scale(var(--carousel-image-scale, 1));
+      transform-origin: center center;
+      overflow: hidden;
+      display: block;
+    }
+
+    .carousel-copy {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .carousel-nav {
+      min-height: 52px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      box-shadow: none;
+    }
+
+    .carousel-nav:hover {
+      border-color: rgba(240, 138, 36, 0.34);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .carousel-nav:focus-visible {
+      outline: 2px solid rgba(240, 138, 36, 0.6);
+      outline-offset: 2px;
+    }
+
+    .carousel-image-fallback {
+      display: grid;
+      gap: 4px;
+      place-items: center;
+      text-align: center;
+      padding: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .carousel-image-fallback strong {
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .carousel-body-type-name {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .carousel-body-type-description {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      max-width: 20ch;
+    }
+
+    .carousel-controls-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .carousel-empty-state {
+      place-items: center;
+      min-height: 240px;
+    }
+
+    .carousel-empty-state .carousel-image-fallback {
+      width: 100%;
+      min-height: 180px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+    }
+
+    .step-actions {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .secondary-button {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .secondary-button:hover {
+      border-color: rgba(240, 138, 36, 0.38);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .body-type-section {
+      display: grid;
+      gap: 10px;
+    }
+
+    #step-profile-metrics {
+      padding: 16px 18px 18px;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.008));
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    #step-profile-metrics h2 {
+      font-size: 20px;
+    }
+
+    #step-profile-metrics .lead {
+      color: #a8a092;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    #step-profile-metrics .grid {
+      gap: 10px;
+    }
+
+    #step-profile-metrics label {
+      gap: 6px;
+    }
+
+    #step-profile-metrics input,
+    #step-profile-metrics select {
+      padding: 10px 12px;
+    }
+
+    #step-profile-metrics .step-actions button {
+      padding: 11px 12px;
+    }
+
+    #step-body-type .step-actions button {
+      padding: 13px 14px;
+      min-height: 48px;
+    }
+
     .support-grid {
       display: grid;
       gap: 12px;
+    }
+
+    .result-insights {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
     }
 
     .support-item {
@@ -164,6 +417,48 @@
       color: var(--text);
     }
 
+    .result-explanation,
+    .result-measurements {
+      display: grid;
+      gap: 8px;
+    }
+
+    .measurement-summary {
+      display: grid;
+      gap: 8px;
+    }
+
+    .measurement-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: baseline;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+
+    .measurement-row:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .measurement-values {
+      display: grid;
+      justify-items: end;
+      gap: 2px;
+      text-align: right;
+    }
+
+    .measurement-values .primary {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .measurement-values .secondary {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
     .muted {
       color: var(--muted);
     }
@@ -173,6 +468,54 @@
       font-weight: 800;
       letter-spacing: -0.03em;
       color: #ffd7ad;
+    }
+
+    .result-ready {
+      animation: resultReveal 420ms ease;
+    }
+
+    .result-size.is-highlighted {
+      animation: resultPulse 720ms ease;
+    }
+
+    @keyframes resultReveal {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes resultPulse {
+      0% {
+        transform: translateY(14px) scale(0.96);
+        opacity: 0.3;
+      }
+
+      60% {
+        transform: translateY(0) scale(1.04);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes carouselCardIn {
+      from {
+        opacity: 0;
+        transform: translateX(var(--carousel-enter-x)) scale(0.985);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
     }
 
     [hidden] {
@@ -185,84 +528,127 @@
     <section class="card hero">
       <div>
         <div class="eyebrow">FitPredictor</div>
-        <h1>Chart-first fit guidance</h1>
-        <p class="lead">Review the current page, add your profile, and get a local-first size recommendation with chart and review status.</p>
+        <h1>Fallback-first fit guidance</h1>
+          <p class="lead">Review the current page, add your profile, and get a local-first size recommendation with chart and review status.</p>
       </div>
       <div class="product-preview">
         <img id="product-image" alt="Product preview">
         <div>
           <h2 id="product-title">Current product page</h2>
           <p id="page-status" class="lead">Checking the active tab for product context.</p>
-          <div id="image-status" class="status-pill">Scanning the page for product imagery</div>
+          <div class="status-row">
+            <div id="image-status" class="status-pill">Scanning the page for product imagery</div>
+          </div>
+          <div id="chart-detect-status" hidden></div>
         </div>
       </div>
     </section>
 
-    <section id="step-profile" class="card">
-      <div class="eyebrow">Step 1</div>
-      <h2>Profile Inputs</h2>
-      <p class="lead" style="margin-top: 8px; margin-bottom: 16px;">FitPredictor uses your profile with the current page context. Charts stay primary. Reviews remain supportive only.</p>
+    <form id="profile-form" class="form-shell">
+      <section id="step-body-type" class="card step-panel">
+        <div class="eyebrow">Step 1 of 3</div>
+        <div>
+          <h2>Choose your body type</h2>
+          <p class="lead" style="margin-top: 8px;">Pick the gender track and the silhouette that best matches the fit profile you want to build.</p>
+        </div>
 
-      <form id="profile-form" class="grid">
-        <label>
-          Gender
-          <select id="gender" required>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </label>
+        <div class="gender-toggle" id="gender-toggle" role="group" aria-label="Gender selection">
+          <button type="button" aria-pressed="true" data-gender="male">Male</button>
+          <button type="button" aria-pressed="false" data-gender="female">Female</button>
+        </div>
 
-        <label>
-          Body Type
-          <select id="body-type" required></select>
-        </label>
+        <input id="gender" type="hidden" value="male" required>
 
-        <label>
-          Age
-          <input id="age" type="number" min="1" max="120" placeholder="28" required>
-        </label>
+        <div id="body-type-carousel" class="body-type-carousel" aria-live="polite"></div>
 
-        <label>
-          Height (cm)
-          <input id="height" type="number" min="50" max="250" placeholder="175" required>
-        </label>
+        <div class="step-actions">
+          <button id="step-1-next" type="button">Continue to profile metrics</button>
+        </div>
+      </section>
 
-        <label>
-          Weight (kg)
-          <input id="weight" type="number" min="20" max="300" placeholder="72" required>
-        </label>
+      <section id="step-profile-metrics" class="card step-panel" hidden>
+        <div class="eyebrow">Step 2 of 3</div>
+        <div>
+          <h2>Profile Inputs</h2>
+          <p class="lead" style="margin-top: 8px;">Fill in your metrics, choose how you want tops to fit, and keep the active page URL attached so the recommendation can stay local-first.</p>
+        </div>
 
-        <label>
-          Website
-          <input id="website" type="url" placeholder="https://example.com/product" readonly>
-        </label>
+        <input id="body-type" type="hidden" required>
+        <input id="body-type-variant" type="hidden" value="default">
 
-        <button id="recommend-button" class="full-span" type="submit">Get Recommendation</button>
-      </form>
-    </section>
+        <div class="grid">
+          <label>
+            Age
+            <input id="age" type="number" min="1" max="120" placeholder="28" required>
+          </label>
+
+          <label>
+            Height (cm)
+            <input id="height" type="number" min="50" max="250" placeholder="175" required>
+          </label>
+
+          <label>
+            Weight (kg)
+            <input id="weight" type="number" min="20" max="300" placeholder="72" required>
+          </label>
+
+          <label>
+            Top Fit Preference
+            <select id="fit-preference">
+              <option value="slim">Slim</option>
+              <option value="regular" selected>Regular</option>
+              <option value="relaxed">Relaxed</option>
+              <option value="oversized">Oversized</option>
+            </select>
+          </label>
+
+          <label class="full-span">
+            Website
+            <input id="website" type="url" placeholder="https://example.com/product" readonly>
+          </label>
+        </div>
+
+        <div class="step-actions">
+          <button id="step-2-back" type="button" class="secondary-button">Back</button>
+          <button id="recommend-button" type="submit">Get Recommendation</button>
+        </div>
+      </section>
+    </form>
 
     <section id="step-result" class="card" hidden>
-      <div class="eyebrow">Step 2</div>
+      <div class="eyebrow">Step 3 of 3</div>
       <h2>Recommendation</h2>
       <p id="result-summary" class="lead" style="margin-top: 8px;">Your size recommendation is ready.</p>
       <div id="size-recommendation" class="result-size" style="margin-top: 14px;">-</div>
+
+      <div class="result-insights">
+        <div class="support-item result-explanation">
+          <strong>Why this size</strong>
+          <span id="recommendation-explanation" class="muted">A compact explanation will appear here after the backend responds.</span>
+        </div>
+        <div class="support-item result-measurements">
+          <strong>Predicted measurements</strong>
+          <div id="measurement-summary" class="measurement-summary" aria-live="polite">
+            <span class="muted">Your predicted measurements will appear here.</span>
+          </div>
+        </div>
+      </div>
 
       <div class="support-grid" style="margin-top: 18px;">
         <div class="support-item">
           <strong>Chart Status</strong>
           <span id="chart-status" class="muted">Unavailable</span>
         </div>
-        <div class="support-item">
-          <strong>Review Status</strong>
-          <span id="review-status" class="muted">Unavailable</span>
-        </div>
-        <div class="support-item">
-          <strong>Review Note</strong>
-          <span id="review-note" class="muted">No reviews available</span>
-        </div>
+        <span id="review-status" hidden></span>
+        <span id="review-note" hidden></span>
+      </div>
+
+      <div class="step-actions" style="margin-top: 18px;">
+        <button id="step-3-back" type="button" class="secondary-button">Edit inputs</button>
       </div>
     </section>
   </main>
-  <script src="pop.js"></script>
+  <script src="page-context.js"></script>
+  <script src="dist/pop.js"></script>
 </body>
 </html>

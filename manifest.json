@@ -24,6 +24,17 @@
     "48": "assets/icons/icon-48.png",
     "128": "assets/icons/icon-128.png"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "page-context.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "permissions": [
     "activeTab",
     "scripting",
@@ -31,5 +42,16 @@
   ],
   "host_permissions": [
     "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "models/chest_model.json",
+        "models/waist_model.json",
+        "models/neck_model.json",
+        "models/hip_model.json"
+      ],
+      "matches": ["<all_urls>"]
+    }
   ]
 }

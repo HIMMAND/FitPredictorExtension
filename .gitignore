@@ -11,10 +11,26 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Generated evaluation artifacts
-reports/model-evals/**/*.joblib
+reports/model-evals/
 
 # Node/local dependency installs
 node_modules/
+
+# Local environment secrets
+.env
+.env.local
+
+# Env template (no AI API feature)
+.env.example
+
+# Build output (keep bundled extension JS for zero-friction contributor onboarding)
+dist/*.wasm
+dist/*.mjs
+
+# Binary ML artifacts (regeneratable from training)
+*.joblib
+ml-models/
+
 
 # macOS noise
 .DS_Store
