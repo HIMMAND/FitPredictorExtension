@@ -19,7 +19,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from training.data_prep.ansur import combine_datasets
 
-FEATURES = ["age_years", "height_cm", "weight_kg", "gender"]
+FEATURES = ["age_years", "height_cm", "weight_kg", "gender", "body_type"]
 TARGETS = {
     "chest_cm": "chest_model.joblib",
     "waist_cm": "waist_model.joblib",
@@ -32,6 +32,7 @@ def build_pipeline() -> Pipeline:
     preprocessor = ColumnTransformer(
         [
             ("gender", OneHotEncoder(handle_unknown="ignore"), ["gender"]),
+            ("body_type", OneHotEncoder(handle_unknown="ignore"), ["body_type"]),
             ("numeric", "passthrough", ["age_years", "height_cm", "weight_kg"]),
         ]
     )
@@ -62,7 +63,7 @@ def main() -> None:
             "mae": mean_absolute_error(y_test, predictions),
             "r2": r2_score(y_test, predictions),
         }
-        joblib.dump(pipeline, args.out_dir / filename)
+        joblib.dump(pipeline, args.out_dir / filename, compress=("xz", 3))
 
     (args.out_dir / "metrics.json").write_text(
         json.dumps(metrics, indent=2),
