@@ -4,6 +4,14 @@ A Chrome extension that predicts your clothing size using local body-measurement
 
 ---
 
+## Screenshots
+
+| Product detected | Body type | Profile inputs | Recommendation |
+|---|---|---|---|
+| ![Product detected](assets/screenshots/1.png) | ![Body type](assets/screenshots/2.png) | ![Profile inputs](assets/screenshots/3.png) | ![Recommendation](assets/screenshots/4.png) |
+
+---
+
 ## How it works
 
 1. You enter age, height, weight, gender, and body type
