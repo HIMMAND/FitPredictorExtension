@@ -15,12 +15,7 @@ A Chrome extension that predicts your clothing size using local body-measurement
 
 ## Getting started
 
-### Prerequisites
-
-- Node.js 18+ (only needed to rebuild the bundle or run tests)
-- Python 3.9+ with `scikit-learn joblib numpy pandas` — only needed if retraining models
-
----
+No Python needed. ONNX models are committed — clone and load.
 
 ### 1. Clone the repo
 
@@ -29,37 +24,33 @@ git clone <repo-url>
 cd FitPredictorExtension
 ```
 
-### 2. Install Node dependencies
-
-```bash
-npm install
-```
-
-### 3. Train the ML models
-
-The `.joblib` model files are not committed. Generate them from the ANSUR dataset:
-
-```bash
-pip install scikit-learn joblib numpy pandas
-python training/train/train_measurement_models.py
-```
-
-This writes `chest_model.joblib`, `waist_model.joblib`, `neck_model.joblib`, `hip_model.joblib`, and `body_type_encoder.joblib` into `ml-models/`.
-
-> See `training/README.md` for dataset setup instructions.
-
-### 4. Load the extension in Chrome
+### 2. Load the extension in Chrome
 
 1. Open `chrome://extensions`
 2. Enable **Developer mode** (top right)
 3. Click **Load unpacked**
 4. Select this repository root
 
-### 5. Test it
+### 3. Test it
 
-Open any product page on a supported brand (H&M, Pull&Bear, Splash, Bershka, Brands For Less), open the FitPredictor side panel, and enter your measurements.
+Open any product page on a supported brand (H&M, Pull&Bear, Splash, Bershka, Brands For Less, Centrepoint), open the FitPredictor side panel, and enter your measurements.
 
 > After reloading the extension, refresh any already-open product tabs once so the content script activates.
+
+---
+
+## Retraining models (optional)
+
+The ONNX models in `models/` are pre-built and committed. Only do this if you want to retrain from scratch using the ANSUR dataset.
+
+**Prerequisites:** Python 3.9+, Node.js 18+
+
+```bash
+pip install scikit-learn joblib numpy pandas
+python training/train/train_measurement_models.py
+```
+
+This writes `.joblib` files into `ml-models/`. To convert to ONNX and rebuild the bundle, see `training/README.md`.
 
 ---
 
