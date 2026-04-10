@@ -2,6 +2,8 @@
 
 A Chrome extension that predicts your clothing size using local body-measurement models, brand size charts, and review signals — no data leaves your device.
 
+Chrome Extentsion: https://chromewebstore.google.com/detail/gapnodbdkdkdgbgmmodkaedkblemjbfn?utm_source=item-share-cb
+
 ---
 
 ## How it works
